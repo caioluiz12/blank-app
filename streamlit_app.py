@@ -2,19 +2,23 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer, util
+from transformers import pipeline
 import numpy as np
 
-st.set_page_config(page_title="DetectaOdonto – Evidência Científica", layout="centered")
-st.title("🧠 DetectaOdonto – Avaliação científica automatizada de conteúdos odontológicos")
+st.set_page_config(page_title="DetectaOdonto – Avaliação científica com tradução", layout="centered")
+st.title("🧠 DetectaOdonto – Avaliação automática com tradução PT→EN")
 
-# Carrega modelo
-@st.cache_resource
-def carregar_modelo():
+@st.cache_resource(show_spinner=False)
+def carregar_modelo_embedding():
     return SentenceTransformer('all-MiniLM-L6-v2')
 
-modelo = carregar_modelo()
+@st.cache_resource(show_spinner=False)
+def carregar_modelo_traducao():
+    return pipeline("translation", model="Helsinki-NLP/opus-mt-pt-en")
 
-# Extrai texto da URL
+modelo_embed = carregar_modelo_embedding()
+modelo_traducao = carregar_modelo_traducao()
+
 def extrair_texto(url):
     try:
         resposta = requests.get(url, timeout=10)
@@ -26,12 +30,19 @@ def extrair_texto(url):
     except Exception as e:
         return None, f"Erro ao extrair texto: {e}"
 
-# Divide o texto em blocos
 def dividir_texto(texto, tamanho=500):
     palavras = texto.split()
     return [" ".join(palavras[i:i+tamanho]) for i in range(0, len(palavras), tamanho)]
 
-# Busca artigos científicos via PubMed
+def traduzir_texto(texto_pt):
+    # Traduz texto em blocos para evitar estouro de limite
+    blocos = dividir_texto(texto_pt, tamanho=200)
+    texto_ingles = ""
+    for bloco in blocos:
+        resultado = modelo_traducao(bloco, max_length=400)
+        texto_ingles += resultado[0]['translation_text'] + " "
+    return texto_ingles.strip()
+
 def buscar_artigos_pubmed(query, max_artigos=3):
     try:
         base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -57,39 +68,41 @@ def buscar_artigos_pubmed(query, max_artigos=3):
     except Exception as e:
         return []
 
-# Interface
-url = st.text_input("📎 Cole aqui a URL de uma matéria odontológica:")
+url = st.text_input("📎 Cole aqui a URL da matéria odontológica:")
 
 if st.button("🔍 Avaliar conteúdo"):
     if not url:
         st.warning("Por favor, insira uma URL.")
     else:
-        texto, erro = extrair_texto(url)
-        if texto is None:
+        texto_pt, erro = extrair_texto(url)
+        if texto_pt is None:
             st.error(erro)
         else:
-            st.subheader("📝 Conteúdo analisado (resumo):")
-            st.write(texto[:2000] + "..." if len(texto) > 2000 else texto)
+            st.subheader("📝 Texto extraído (português):")
+            st.write(texto_pt[:2000] + "..." if len(texto_pt) > 2000 else texto_pt)
 
-            st.info("🔬 Buscando artigos científicos relacionados...")
+            st.info("🌐 Traduzindo texto para inglês para busca científica...")
+            texto_en = traduzir_texto(texto_pt)
+            st.write(texto_en[:2000] + "..." if len(texto_en) > 2000 else texto_en)
+
+            st.info("🔬 Buscando artigos científicos relacionados no PubMed...")
             palavras_chave = (
                 "dentistry OR dental treatment OR root canal OR orthodontics OR "
                 "laser therapy OR dental aesthetics OR oral health OR fluoride OR "
                 "caries OR gingivitis OR periodontitis OR whitening OR implants"
             )
-
             artigos = buscar_artigos_pubmed(palavras_chave)
 
             if not artigos:
                 st.warning("Nenhum artigo científico encontrado para comparação.")
             else:
-                blocos = dividir_texto(texto)
-                emb_blocos = modelo.encode(blocos, convert_to_tensor=True)
+                blocos = dividir_texto(texto_en)
+                emb_blocos = modelo_embed.encode(blocos, convert_to_tensor=True)
 
                 melhor_score = 0
                 melhor_abstract = ""
                 for abstract in artigos:
-                    emb_abstract = modelo.encode(abstract, convert_to_tensor=True)
+                    emb_abstract = modelo_embed.encode(abstract, convert_to_tensor=True)
                     scores = util.cos_sim(emb_blocos, emb_abstract)
                     media = np.mean(scores).item()
                     if media > melhor_score:
@@ -97,7 +110,6 @@ if st.button("🔍 Avaliar conteúdo"):
                         melhor_abstract = abstract
 
                 st.subheader("📊 Resultado da comparação:")
-
                 if melhor_score > 0.6:
                     st.success(f"✅ Conteúdo com alta similaridade com evidência científica (score: {melhor_score:.2f})")
                 elif melhor_score > 0.3:
@@ -107,4 +119,3 @@ if st.button("🔍 Avaliar conteúdo"):
 
                 st.markdown("**🧪 Artigo mais semelhante encontrado:**")
                 st.caption(melhor_abstract[:700] + "...")
-    
