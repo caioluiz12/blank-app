@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer, util
-from transformers import pipeline
+from googletrans import Translator
 import numpy as np
 
 st.set_page_config(page_title="DetectaOdonto – Avaliação científica com tradução", layout="centered")
@@ -13,11 +13,11 @@ def carregar_modelo_embedding():
     return SentenceTransformer('all-MiniLM-L6-v2')
 
 @st.cache_resource(show_spinner=False)
-def carregar_modelo_traducao():
-    return pipeline("translation", model="Helsinki-NLP/opus-mt-pt-en")
+def carregar_translator():
+    return Translator()
 
 modelo_embed = carregar_modelo_embedding()
-modelo_traducao = carregar_modelo_traducao()
+translator = carregar_translator()
 
 def extrair_texto(url):
     try:
@@ -35,12 +35,11 @@ def dividir_texto(texto, tamanho=500):
     return [" ".join(palavras[i:i+tamanho]) for i in range(0, len(palavras), tamanho)]
 
 def traduzir_texto(texto_pt):
-    # Traduz texto em blocos para evitar estouro de limite
     blocos = dividir_texto(texto_pt, tamanho=200)
     texto_ingles = ""
     for bloco in blocos:
-        resultado = modelo_traducao(bloco, max_length=400)
-        texto_ingles += resultado[0]['translation_text'] + " "
+        resultado = translator.translate(bloco, src='pt', dest='en')
+        texto_ingles += resultado.text + " "
     return texto_ingles.strip()
 
 def buscar_artigos_pubmed(query, max_artigos=3):
