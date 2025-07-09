@@ -7,14 +7,14 @@ import numpy as np
 st.set_page_config(page_title="DetectaOdonto – Evidência Científica", layout="centered")
 st.title("🧠 DetectaOdonto – Avaliação científica automatizada de conteúdos odontológicos")
 
-# Carrega modelo de embeddings
+# Carrega modelo
 @st.cache_resource
 def carregar_modelo():
     return SentenceTransformer('all-MiniLM-L6-v2')
 
 modelo = carregar_modelo()
 
-# Extrai texto de um link
+# Extrai texto da URL
 def extrair_texto(url):
     try:
         resposta = requests.get(url, timeout=10)
@@ -26,7 +26,12 @@ def extrair_texto(url):
     except Exception as e:
         return None, f"Erro ao extrair texto: {e}"
 
-# Busca artigos no PubMed com E-utilities
+# Divide o texto em blocos
+def dividir_texto(texto, tamanho=500):
+    palavras = texto.split()
+    return [" ".join(palavras[i:i+tamanho]) for i in range(0, len(palavras), tamanho)]
+
+# Busca artigos científicos via PubMed
 def buscar_artigos_pubmed(query, max_artigos=3):
     try:
         base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
@@ -52,7 +57,7 @@ def buscar_artigos_pubmed(query, max_artigos=3):
     except Exception as e:
         return []
 
-# Interface do usuário
+# Interface
 url = st.text_input("📎 Cole aqui a URL de uma matéria odontológica:")
 
 if st.button("🔍 Avaliar conteúdo"):
@@ -63,36 +68,43 @@ if st.button("🔍 Avaliar conteúdo"):
         if texto is None:
             st.error(erro)
         else:
-            st.subheader("📝 Trecho do conteúdo analisado:")
-            st.write(texto[:800] + "...")
+            st.subheader("📝 Conteúdo analisado (resumo):")
+            st.write(texto[:2000] + "..." if len(texto) > 2000 else texto)
 
-            # Busca artigos relacionados com base em palavras frequentes
             st.info("🔬 Buscando artigos científicos relacionados...")
-            palavras_chave = "odontologia OR tratamento dentário OR canal OR ortodontia OR laser OR estética dental"
+            palavras_chave = (
+                "dentistry OR dental treatment OR root canal OR orthodontics OR "
+                "laser therapy OR dental aesthetics OR oral health OR fluoride OR "
+                "caries OR gingivitis OR periodontitis OR whitening OR implants"
+            )
+
             artigos = buscar_artigos_pubmed(palavras_chave)
 
             if not artigos:
                 st.warning("Nenhum artigo científico encontrado para comparação.")
             else:
-                # Embeddings e comparação por similaridade
-                emb_texto = modelo.encode(texto, convert_to_tensor=True)
-                similaridades = []
-                for i, abstract in enumerate(artigos):
-                    emb_abstract = modelo.encode(abstract, convert_to_tensor=True)
-                    sim = util.cos_sim(emb_texto, emb_abstract).item()
-                    similaridades.append((i, sim, abstract))
+                blocos = dividir_texto(texto)
+                emb_blocos = modelo.encode(blocos, convert_to_tensor=True)
 
-                # Mostra o mais similar
-                mais_proximo = max(similaridades, key=lambda x: x[1])
-                indice, score, abstract = mais_proximo
+                melhor_score = 0
+                melhor_abstract = ""
+                for abstract in artigos:
+                    emb_abstract = modelo.encode(abstract, convert_to_tensor=True)
+                    scores = util.cos_sim(emb_blocos, emb_abstract)
+                    media = np.mean(scores).item()
+                    if media > melhor_score:
+                        melhor_score = media
+                        melhor_abstract = abstract
 
                 st.subheader("📊 Resultado da comparação:")
-                if score > 0.6:
-                    st.success(f"✅ Conteúdo com alta similaridade com evidência científica (score: {score:.2f})")
-                elif score > 0.3:
-                    st.warning(f"⚠️ Similaridade moderada com evidência científica (score: {score:.2f})")
-                else:
-                    st.error(f"❌ Baixa similaridade – potencial desinformação (score: {score:.2f})")
 
-                st.markdown("**🧪 Artigo utilizado na comparação:**")
-                st.caption(abstract[:700] + "...")
+                if melhor_score > 0.6:
+                    st.success(f"✅ Conteúdo com alta similaridade com evidência científica (score: {melhor_score:.2f})")
+                elif melhor_score > 0.3:
+                    st.warning(f"⚠️ Similaridade moderada com evidência científica (score: {melhor_score:.2f})")
+                else:
+                    st.error(f"❌ Baixa similaridade – potencial desinformação (score: {melhor_score:.2f})")
+
+                st.markdown("**🧪 Artigo mais semelhante encontrado:**")
+                st.caption(melhor_abstract[:700] + "...")
+    
