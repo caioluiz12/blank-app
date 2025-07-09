@@ -2,7 +2,7 @@ import streamlit as st
 
 
 import requests
-from newspaper import Article
+from newspaper3k import Article
 from sklearn.externals import joblib  # se usar modelo treinado
 # ou use HuggingFace, transformers, etc.
 
