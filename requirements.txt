@@ -1,12 +1,6 @@
 streamlit
-newspaper3k
-pandas
-numpy
-scikit-learn
 requests
 beautifulsoup4
 sentence-transformers
-torch
-transformers
-openai
-bs4
+scikit-learn
+numpy
