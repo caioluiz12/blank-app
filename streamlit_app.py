@@ -55,4 +55,4 @@ if st.button("Analisar"):
                     st.caption("_Resposta explicativa gerada pela IA aqui..._")
 
                     # Validação especialista
-                    val = st.radio(f"Você concorda com a avaliação do Claim {i+1}?", ("Sim", "Não
+                    val = st.radio(f"Você concorda com a avaliação do Claim {i+1}?", ("Sim", "Não"))
