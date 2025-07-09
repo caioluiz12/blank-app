@@ -1,12 +1,20 @@
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-import random
+from sentence_transformers import SentenceTransformer, util
+import numpy as np
 
-st.set_page_config(page_title="DetectaOdonto - Combate à Desinformação", layout="centered")
-st.title("🦷 DetectaOdonto – IA contra desinformação na odontologia")
+st.set_page_config(page_title="DetectaOdonto – Evidência Científica", layout="centered")
+st.title("🧠 DetectaOdonto – Avaliação científica automatizada de conteúdos odontológicos")
 
-# Função para extrair texto de uma URL
+# Carrega modelo de embeddings
+@st.cache_resource
+def carregar_modelo():
+    return SentenceTransformer('all-MiniLM-L6-v2')
+
+modelo = carregar_modelo()
+
+# Extrai texto de um link
 def extrair_texto(url):
     try:
         resposta = requests.get(url, timeout=10)
@@ -18,42 +26,73 @@ def extrair_texto(url):
     except Exception as e:
         return None, f"Erro ao extrair texto: {e}"
 
-# Entrada de URL
-url = st.text_input("📎 Cole aqui a URL de uma postagem ou matéria:")
+# Busca artigos no PubMed com E-utilities
+def buscar_artigos_pubmed(query, max_artigos=3):
+    try:
+        base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
+        search = requests.get(base_url + "esearch.fcgi", params={
+            "db": "pubmed",
+            "term": query,
+            "retmode": "json",
+            "retmax": max_artigos
+        }).json()
 
-if st.button("🔍 Analisar"):
+        ids = search["esearchresult"]["idlist"]
+        if not ids:
+            return []
+
+        fetch = requests.get(base_url + "efetch.fcgi", params={
+            "db": "pubmed",
+            "id": ",".join(ids),
+            "retmode": "xml"
+        })
+        soup = BeautifulSoup(fetch.content, "xml")
+        abstracts = [artigo.Abstract.Text.text for artigo in soup.find_all("PubmedArticle") if artigo.Abstract]
+        return abstracts
+    except Exception as e:
+        return []
+
+# Interface do usuário
+url = st.text_input("📎 Cole aqui a URL de uma matéria odontológica:")
+
+if st.button("🔍 Avaliar conteúdo"):
     if not url:
-        st.warning("Por favor, insira uma URL válida.")
+        st.warning("Por favor, insira uma URL.")
     else:
         texto, erro = extrair_texto(url)
-
         if texto is None:
             st.error(erro)
         else:
-            st.subheader("📝 Texto extraído (trecho):")
+            st.subheader("📝 Trecho do conteúdo analisado:")
             st.write(texto[:800] + "...")
 
-            # Detecção simples de claims com palavras-chave
-            palavras_chave = ["cura", "substitui", "elimina", "resolve", "sem dor", "milagre", "definitivo"]
-            claims = [frase.strip() for frase in texto.split(".") if any(p in frase.lower() for p in palavras_chave)]
+            # Busca artigos relacionados com base em palavras frequentes
+            st.info("🔬 Buscando artigos científicos relacionados...")
+            palavras_chave = "odontologia OR tratamento dentário OR canal OR ortodontia OR laser OR estética dental"
+            artigos = buscar_artigos_pubmed(palavras_chave)
 
-            if not claims:
-                st.info("🔎 Nenhum claim relevante detectado neste texto.")
+            if not artigos:
+                st.warning("Nenhum artigo científico encontrado para comparação.")
             else:
-                st.subheader("🔍 Claims detectados:")
+                # Embeddings e comparação por similaridade
+                emb_texto = modelo.encode(texto, convert_to_tensor=True)
+                similaridades = []
+                for i, abstract in enumerate(artigos):
+                    emb_abstract = modelo.encode(abstract, convert_to_tensor=True)
+                    sim = util.cos_sim(emb_texto, emb_abstract).item()
+                    similaridades.append((i, sim, abstract))
 
-                for i, claim in enumerate(claims):
-                    st.markdown(f"**Claim {i+1}:** {claim}")
+                # Mostra o mais similar
+                mais_proximo = max(similaridades, key=lambda x: x[1])
+                indice, score, abstract = mais_proximo
 
-                    # Simula avaliação de risco pela IA
-                    score = random.random()
-                    if score > 0.6:
-                        st.error("⚠️ Potencial desinformação")
-                    else:
-                        st.success("✅ Baixo risco de desinformação")
+                st.subheader("📊 Resultado da comparação:")
+                if score > 0.6:
+                    st.success(f"✅ Conteúdo com alta similaridade com evidência científica (score: {score:.2f})")
+                elif score > 0.3:
+                    st.warning(f"⚠️ Similaridade moderada com evidência científica (score: {score:.2f})")
+                else:
+                    st.error(f"❌ Baixa similaridade – potencial desinformação (score: {score:.2f})")
 
-                    # Geração de explicação (simulada por enquanto)
-                    st.caption("_Explicação automática será gerada aqui..._")
-
-                    # Validação do especialista
-                    val = st.radio(f"Você concorda com a avaliação do Claim {i+1}?", ("Sim", "Não"), key=f"validacao_{i+1}")
+                st.markdown("**🧪 Artigo utilizado na comparação:**")
+                st.caption(abstract[:700] + "...")
