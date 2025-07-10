@@ -27,11 +27,12 @@ def gerar_analise_desinformacao(texto):
         " Receberá o texto de uma matéria sobre odontologia e deve avaliá-lo cientificamente."
         " Busque referências científicas confiáveis (como PubMed, Cochrane, etc.) para sustentar sua avaliação."
         " Para encontrar artigos científicos relevantes, extraia os principais termos do texto (em português), traduza para o inglês, e pesquise usando palavras-chave no estilo: 'substance name AND dental health', 'ingredient AND tooth whitening', ou 'abrasion AND enamel'."
-        " Cite os artigos com base no nome do estudo, autores principais, ano, base (PubMed, Cochrane etc.) e link clicável."
+        " Utilize o site https://pubmed.ncbi.nlm.nih.gov/ e, se possível, inclua links diretos para os estudos."
+        " Mesmo que os artigos estejam atrás de paywall, forneça os títulos, autores, ano, base (ex: PubMed) e links."
         " Retorne os seguintes itens:\n"
         "1. Um resumo técnico do conteúdo.\n"
         "2. Avaliação do risco de desinformação: 'Baixo risco', 'Potencial risco' ou 'Alto risco'.\n"
-        "3. Justificativa com base científica (cite ao menos 1 a 2 fontes científicas reais com nome, ano, base e link acessível).\n"
+        "3. Justificativa com base científica (cite pelo menos 1 a 2 fontes reais com links clicáveis).\n"
         "\nTexto da matéria:\n"
         f"{texto}\n"
         "\nRetorne apenas os três itens solicitados, de forma objetiva."
@@ -53,8 +54,22 @@ def transformar_links_em_html(texto):
     url_regex = r"(https?://\S+)"
     return re.sub(url_regex, r'<a href="\1" target="_blank">\1</a>', texto)
 
+# Função para detectar e destacar o risco de desinformação
+def destacar_risco(resultado):
+    if "alto risco" in resultado.lower():
+        cor = "#FF4B4B"  # vermelho
+        risco = "🟥 Alto risco de desinformação"
+    elif "potencial risco" in resultado.lower():
+        cor = "#FFD700"  # amarelo
+        risco = "🟨 Potencial risco de desinformação"
+    else:
+        cor = "#32CD32"  # verde
+        risco = "🟩 Baixo risco de desinformação"
+    return f'<div style="background-color:{cor};padding:10px;border-radius:8px;font-weight:bold">{risco}</div>'
+
 # Interface com Streamlit
-st.title("Detector de Desinformação em Odontologia (via Gemini ✨)")
+st.set_page_config(page_title="Detector de Desinformação Odonto", layout="centered")
+st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
 st.markdown("Cole abaixo o link da matéria que você deseja analisar:")
 
 url = st.text_input("URL da matéria")
@@ -67,10 +82,12 @@ if url:
         else:
             st.success("Texto extraído com sucesso! Agora analisando com Gemini...")
             resultado = gerar_analise_desinformacao(texto_extraido)
+            destaque_html = destacar_risco(resultado)
             links_extraidos = extrair_links(resultado)
             resultado_com_links = transformar_links_em_html(resultado)
 
             st.markdown("### Resultado da Análise IA:")
+            st.markdown(destaque_html, unsafe_allow_html=True)
             st.markdown(resultado_com_links, unsafe_allow_html=True)
 
             st.markdown("#### Referências Científicas Citadas:")
