@@ -42,7 +42,7 @@ def extrair_texto(url):
 def gerar_resumo_openai(texto):
     prompt = f"Resuma os principais claims científicos da seguinte notícia odontológica em português:\n\n{texto}\n\nResumo:"
     response = openai.ChatCompletion.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=400,
         temperature=0.3,
