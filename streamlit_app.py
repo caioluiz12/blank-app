@@ -6,7 +6,7 @@ import os
 
 # Configurar chave da API Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("models/gemini-pro-vision")
 
 # Função para extrair texto de uma página web
 def extrair_texto(url):
