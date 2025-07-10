@@ -67,13 +67,16 @@ if url:
             resultado = gerar_analise_desinformacao(texto_extraido)
             links_extraidos = extrair_links(resultado)
             resultado_com_links = transformar_links_em_html(resultado)
+
             st.markdown("### Resultado da Análise IA:")
             st.markdown(resultado_com_links, unsafe_allow_html=True)
 
+            st.markdown("#### Referências Científicas Citadas:")
             if links_extraidos:
-                st.markdown("#### Referências Científicas Citadas:")
                 for link in links_extraidos:
                     st.markdown(f"- [Acessar referência]({link})")
+            else:
+                st.markdown("_Nenhuma referência científica com link foi identificada pela IA._")
 
             st.markdown("---")
             opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
