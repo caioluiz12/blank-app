@@ -2,11 +2,9 @@ streamlit
 requests
 beautifulsoup4
 sentence-transformers
-scikit-learn
 numpy
 googletrans==4.0.0-rc1
 torch
-keybert
-nltk
-httpx
 openai
+python-dotenv
+nltk
