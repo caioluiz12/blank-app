@@ -4,10 +4,16 @@ from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer, util
 from googletrans import Translator
 import openai
-import numpy as np
+import os
+import nltk
+from nltk.tokenize import sent_tokenize
 
-st.set_page_config(page_title="DetectaOdonto com OpenAI", layout="centered")
-st.title("🦷 DetectaOdonto – Resumo inteligente com OpenAI")
+nltk.download('punkt')
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+st.set_page_config(page_title="DetectaOdonto", layout="centered")
+st.title("🦷 DetectaOdonto – Analisando conteúdo com base científica")
 
 @st.cache_resource
 def carregar_modelo_embedding():
@@ -27,19 +33,15 @@ def extrair_texto(url):
     except Exception as e:
         return None, str(e)
 
-def gerar_resumo_openai(texto, chave_api):
-    openai.api_key = chave_api
-    prompt = f"Resuma em português os principais claims científicos da seguinte notícia odontológica:\n\n{texto}\n\nResumo:"
+def gerar_resumo_openai(texto):
+    prompt = f"Resuma os principais claims científicos da seguinte notícia odontológica em português:\n\n{texto}\n\nResumo:"
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=300,
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=400,
         temperature=0.3,
     )
-    resumo = response.choices[0].message.content.strip()
-    return resumo
+    return response.choices[0].message.content.strip()
 
 def traduzir_texto(texto_pt):
     trad = translator.translate(texto_pt, src='pt', dest='en')
@@ -65,55 +67,52 @@ def buscar_artigos_pubmed(query, max_artigos=5):
         soup = BeautifulSoup(fetch.content, "xml")
         abstracts = [art.Abstract.Text.text for art in soup.find_all("PubmedArticle") if art.Abstract]
         return abstracts
-    except Exception as e:
+    except Exception:
         return []
 
-url = st.text_input("URL da notícia odontológica")
-api_key = st.text_input("Chave API OpenAI (sk-...)", type="password")
+url = st.text_input("🔗 Insira o link da notícia odontológica")
 
-if st.button("Analisar"):
-
+if st.button("Analisar conteúdo"):
     if not url:
-        st.warning("Insira a URL da notícia.")
-    elif not api_key:
-        st.warning("Insira a chave API OpenAI.")
+        st.warning("Por favor, insira a URL de uma matéria.")
+    elif openai.api_key is None:
+        st.error("OPENAI_API_KEY não configurada.")
     else:
         texto_pt, erro = extrair_texto(url)
         if texto_pt is None:
-            st.error(f"Erro ao extrair texto: {erro}")
+            st.error(f"Erro ao extrair o texto: {erro}")
         else:
-            st.subheader("📝 Texto extraído (PT):")
-            st.write(texto_pt[:1500] + ("..." if len(texto_pt) > 1500 else ""))
+            st.subheader("📝 Texto extraído:")
+            st.write(texto_pt[:2000] + ("..." if len(texto_pt) > 2000 else ""))
 
-            st.info("🧠 Gerando resumo dos claims com OpenAI...")
-            resumo_pt = gerar_resumo_openai(texto_pt, api_key)
+            st.info("🧠 Gerando resumo dos claims...")
+            resumo_pt = gerar_resumo_openai(texto_pt)
             st.write(resumo_pt)
 
-            st.info("🌐 Traduzindo resumo para inglês...")
+            st.info("🌐 Traduzindo para inglês...")
             resumo_en = traduzir_texto(resumo_pt)
             st.write(resumo_en)
 
-            st.info("🔬 Buscando artigos no PubMed...")
-            artigos = buscar_artigos_pubmed(resumo_en, max_artigos=5)
+            st.info("🔬 Pesquisando no PubMed...")
+            artigos = buscar_artigos_pubmed(resumo_en)
 
             if not artigos:
-                st.warning("Nenhum artigo científico encontrado para comparação.")
+                st.warning("Nenhum artigo relevante encontrado.")
             else:
                 emb_resumo = modelo_embed.encode(resumo_en, convert_to_tensor=True)
                 emb_artigos = modelo_embed.encode(artigos, convert_to_tensor=True)
-
                 scores = util.cos_sim(emb_resumo, emb_artigos)
+
                 melhor_score = scores.max().item()
                 indice_melhor = scores.argmax().item()
 
-                st.subheader("🔍 Resultado da comparação:")
+                st.subheader("🔍 Resultado:")
                 if melhor_score > 0.6:
-                    st.success(f"✅ Conteúdo com alta similaridade científica (score: {melhor_score:.2f})")
+                    st.success(f"✅ Alta similaridade com evidência científica (score: {melhor_score:.2f})")
                 elif melhor_score > 0.3:
                     st.warning(f"⚠️ Similaridade moderada (score: {melhor_score:.2f})")
                 else:
                     st.error(f"❌ Baixa similaridade – possível desinformação (score: {melhor_score:.2f})")
 
-                st.markdown("### Artigo mais semelhante encontrado:")
-                st.write(artigos[indice_melhor][:700] + "...")
-
+                st.markdown("### 📚 Artigo mais próximo encontrado:")
+                st.write(artigos[indice_melhor][:800] + "...")
