@@ -10,7 +10,7 @@ from nltk.tokenize import sent_tokenize
 
 nltk.download('punkt')
 
-# ✅ Lê a chave do ambiente (definida no secrets.toml ou painel)
+# ✅ Lê a chave do ambiente (definida no st.secrets)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # ✅ Verifica se a chave existe
