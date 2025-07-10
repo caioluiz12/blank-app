@@ -1,3 +1,4 @@
+# Ignore pastas/arquivos de segredo
 .streamlit/secrets.toml
 
 # Byte-compiled / optimized / DLL files
