@@ -10,7 +10,13 @@ from nltk.tokenize import sent_tokenize
 
 nltk.download('punkt')
 
+# ✅ Lê a chave do ambiente (definida no secrets.toml ou painel)
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# ✅ Verifica se a chave existe
+if openai.api_key is None:
+    st.error("🚫 A chave OPENAI_API_KEY não está configurada. Verifique o arquivo `.streamlit/secrets.toml` ou os secrets do Streamlit Cloud.")
+    st.stop()
 
 st.set_page_config(page_title="DetectaOdonto", layout="centered")
 st.title("🦷 DetectaOdonto – Analisando conteúdo com base científica")
@@ -75,8 +81,6 @@ url = st.text_input("🔗 Insira o link da notícia odontológica")
 if st.button("Analisar conteúdo"):
     if not url:
         st.warning("Por favor, insira a URL de uma matéria.")
-    elif openai.api_key is None:
-        st.error("OPENAI_API_KEY não configurada.")
     else:
         texto_pt, erro = extrair_texto(url)
         if texto_pt is None:
