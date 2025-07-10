@@ -26,6 +26,8 @@ def gerar_analise_desinformacao(texto):
         "Você é uma inteligência artificial especializada em checagem científica."
         " Receberá o texto de uma matéria sobre odontologia e deve avaliá-lo cientificamente."
         " Busque referências científicas confiáveis (como PubMed, Cochrane, etc.) para sustentar sua avaliação."
+        " Para encontrar artigos científicos relevantes, extraia os principais termos do texto (em português), traduza para o inglês, e pesquise usando palavras-chave no estilo: 'substance name AND dental health', 'ingredient AND tooth whitening', ou 'abrasion AND enamel'."
+        " Cite os artigos com base no nome do estudo, autores principais, ano, base (PubMed, Cochrane etc.) e link clicável."
         " Retorne os seguintes itens:\n"
         "1. Um resumo técnico do conteúdo.\n"
         "2. Avaliação do risco de desinformação: 'Baixo risco', 'Potencial risco' ou 'Alto risco'.\n"
