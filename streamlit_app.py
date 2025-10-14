@@ -11,8 +11,13 @@ import pandas as pd
 import requests
 import json
 import re
+import os
 from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
+import google.generativeai as genai  # ✅ IMPORTAÇÃO CORRETA DO GEMINI
+
+# --- CONFIGURAÇÃO GEMINI ---
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # --- CONFIGURAÇÃO DA PÁGINA (DEVE SER O PRIMEIRO COMANDO STREAMLIT) ---
 st.set_page_config(
