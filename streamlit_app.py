@@ -2,12 +2,15 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import google.generativeai as genai
+import google.generativeai.version as gver
 import os
 import re
 
+print("Versão do Gemini SDK:", gver.__version__)
+
 # Configurar chave da API Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Função para extrair texto de uma página web
 def extrair_texto(url):
