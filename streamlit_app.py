@@ -1,34 +1,55 @@
+# ============================================================
+# Detector de Desinformação Odonto - Streamlit App
+# Autor: Caio Luiz Bitencourt Reis
+# Descrição: Aplicativo para análise de risco de desinformação
+# em conteúdos odontológicos, com integração à API Gemini.
+# ============================================================
+
+# --- IMPORTAÇÕES ---
 import streamlit as st
+import pandas as pd
 import requests
-from bs4 import BeautifulSoup
-import google.generativeai as genai
-import google.generativeai.version as gver
-import os
+import json
 import re
+from bs4 import BeautifulSoup
+from googleapiclient.discovery import build
 
-# ⬇️ Esta linha deve vir logo depois dos imports e antes de qualquer outro comando Streamlit
-st.set_page_config(page_title="Detector de Desinformação Odonto", layout="centered")
+# --- CONFIGURAÇÃO DA PÁGINA (DEVE SER O PRIMEIRO COMANDO STREAMLIT) ---
+st.set_page_config(
+    page_title="Detector de Desinformação Odonto",
+    page_icon="🦷",
+    layout="centered",
+    initial_sidebar_state="auto"
+)
 
-# Verifica e exibe a versão da biblioteca (para debug)
-try:
-    import google.generativeai.version as gver
-    st.caption(f"Versão da lib Gemini: {gver.__version__}")
-except Exception:
-    st.caption("Não foi possível verificar a versão da lib Gemini.")
+# --- TÍTULO E INTRODUÇÃO ---
+st.title("🦷 Detector de Desinformação em Odontologia")
+st.markdown("""
+Este aplicativo tem como objetivo **identificar e classificar conteúdos com risco de desinformação**
+em textos sobre Odontologia.  
+Cole um link ou texto abaixo para que o sistema analise automaticamente com base em evidências científicas.
+""")
 
-# Configuração da API Gemini
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("❌ Chave GEMINI_API_KEY não encontrada nos segredos do Streamlit.")
+# --- SEÇÃO DE ENTRADA ---
+input_type = st.radio(
+    "Selecione o tipo de entrada:",
+    ["🔗 Link de notícia", "📝 Texto manual"]
+)
+
+user_input = ""
+if input_type == "🔗 Link de notícia":
+    user_input = st.text_input("Cole o link da publicação:")
 else:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    user_input = st.text_area("Cole o texto a ser analisado:", height=200)
 
-if st.button("🔍 Testar conexão com o Gemini"):
-    try:
-        resposta = model.generate_content("Diga olá!")
-        st.success(f"✅ Conectado com sucesso! Resposta: {resposta.text}")
-    except Exception as e:
-        st.error(f"❌ Erro ao conectar: {str(e)}")
+# --- BOTÃO DE ANÁLISE ---
+if st.button("🔍 Analisar conteúdo"):
+    if not user_input.strip():
+        st.warning("Por favor, insira um link ou texto para análise.")
+    else:
+        with st.spinner("Analisando o conteúdo..."):
+            # ⚙️ Aqui entra sua função principal de análise com Gemini API
+            st.info("Simulação: análise em andamento... (integração API aqui)")
 
 
 # Configurar chave da API Gemini
