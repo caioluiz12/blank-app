@@ -6,7 +6,12 @@ import google.generativeai.version as gver
 import os
 import re
 
-print("Versão do Gemini SDK:", gver.__version__)
+if st.button("Testar conexão com Gemini"):
+    try:
+        resposta = genai.GenerativeModel("gemini-1.5-flash").generate_content("Diga Olá!")
+        st.success(f"✅ Conectado! Resposta: {resposta.text}")
+    except Exception as e:
+        st.error(f"❌ Erro ao conectar: {e}")
 
 # Configurar chave da API Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
