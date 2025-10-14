@@ -23,7 +23,7 @@ st.set_page_config(
 
 # --- CONFIGURAÇÃO DO GEMINI ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 # --- TÍTULO E INTRODUÇÃO ---
 st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
