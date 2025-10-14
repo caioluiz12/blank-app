@@ -16,8 +16,16 @@ from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 import google.generativeai as genai  # ✅ IMPORTAÇÃO CORRETA DO GEMINI
 
-# --- CONFIGURAÇÃO GEMINI ---
+# ⚙️ Configuração da página (precisa vir antes de qualquer outro st.xxx)
+st.set_page_config(
+    page_title="Detector de Desinformação Odonto",
+    layout="centered",
+    page_icon="🦷"
+)
+
+# Configurar chave da API Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # --- CONFIGURAÇÃO DA PÁGINA (DEVE SER O PRIMEIRO COMANDO STREAMLIT) ---
 st.set_page_config(
