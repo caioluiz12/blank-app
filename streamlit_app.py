@@ -6,12 +6,31 @@ import google.generativeai.version as gver
 import os
 import re
 
-if st.button("Testar conexão com Gemini"):
+import streamlit as st
+import google.generativeai as genai
+import os
+
+# Verifica e exibe a versão da biblioteca (para debug)
+try:
+    import google.generativeai.version as gver
+    st.caption(f"Versão da lib Gemini: {gver.__version__}")
+except Exception:
+    st.caption("Não foi possível verificar a versão da lib Gemini.")
+
+# Configuração da API Gemini
+if "GEMINI_API_KEY" not in st.secrets:
+    st.error("❌ Chave GEMINI_API_KEY não encontrada nos segredos do Streamlit.")
+else:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+if st.button("🔍 Testar conexão com o Gemini"):
     try:
-        resposta = genai.GenerativeModel("gemini-1.5-flash").generate_content("Diga Olá!")
-        st.success(f"✅ Conectado! Resposta: {resposta.text}")
+        resposta = model.generate_content("Diga olá!")
+        st.success(f"✅ Conectado com sucesso! Resposta: {resposta.text}")
     except Exception as e:
-        st.error(f"❌ Erro ao conectar: {e}")
+        st.error(f"❌ Erro ao conectar: {str(e)}")
+
 
 # Configurar chave da API Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
