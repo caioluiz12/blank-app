@@ -6,9 +6,8 @@ import google.generativeai.version as gver
 import os
 import re
 
-import streamlit as st
-import google.generativeai as genai
-import os
+# ⬇️ Esta linha deve vir logo depois dos imports e antes de qualquer outro comando Streamlit
+st.set_page_config(page_title="Detector de Desinformação Odonto", layout="centered")
 
 # Verifica e exibe a versão da biblioteca (para debug)
 try:
