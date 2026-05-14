@@ -165,10 +165,13 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
     (Descreva o tratamento padrão para a Condição Clínica Foco, segundo a especialidade.)
 
-    ### 5. Referências e Diretrizes Oficiais
+   ### 5. Referências e Diretrizes Oficiais
     - 📂 **Catálogo(s) Oficial(is):** [Liste o(s) link(s) da(s) especialidade(s) selecionada(s)]
-    - 📄 **Documento Padrão-Ouro Recomendado:** (Com base na Condição Clínica Foco, cite o NOME EXATO do documento oficial da associação que o usuário deve buscar no catálogo para ver o padrão-ouro de tratamento. Ex: "Clinical Practice Guideline for the Treatment of Stage I-III Periodontitis". Explique brevemente: "Este documento rege o tratamento aceito para [Condição Clínica], o qual deve ser usado como base de comparação.")
-    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca atual não retornou links diretos confirmando a intervenção da matéria; consulte o documento nomeado acima.")
+    - 📄 **Documento Padrão-Ouro Recomendado:** (Identifique o NOME EXATO do documento oficial da associação. Para evitar links quebrados, você DEVE gerar um link de busca restrita do Google usando o formato Markdown abaixo:
+    [Nome do Documento Oficial](https://www.google.com/search?q=site:DOMINIO_DA_ASSOCIACAO.org+"NOME+DO+DOCUMENTO")
+    Exemplo: [Clinical Practice Guideline on Fluoride Therapy](https://www.google.com/search?q=site:aapd.org+"Clinical+Practice+Guideline+on+Fluoride+Therapy")
+    Logo abaixo, explique brevemente: "Este documento rege o tratamento aceito para [Condição Clínica], o qual deve ser usado como base de comparação.")
+    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca em tempo real não retornou links diretos confirmando a intervenção da matéria; clique no link do Documento Padrão-Ouro acima para ler a recomendação oficial.")
     """
     try:
         resposta = model.generate_content(prompt)
