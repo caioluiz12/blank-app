@@ -121,46 +121,45 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     prompt = f"""
     VOCÊ É UM AUDITOR CIENTÍFICO DE ODONTOLOGIA EXTREMAMENTE RÍGIDO.
     
-    CRITÉRIO DE JULGAMENTO OBRIGATÓRIO:
-    1. Se as 'Evidências Confiáveis' não contiverem uma diretriz específica sobre o tema, você DEVE classificar como 🟨 POTENCIAL RISCO. 
-    2. Nunca classifique como 'Baixo Risco' apenas porque a fonte é uma universidade ou jornal. Sem diretriz clínica = Risco de interpretação equivocada.
-    3. O foco do risco é: "O paciente pode substituir o tratamento padrão por essa nova informação?"
-
-    ARSENAL DE EVIDÊNCIAS COLETADAS:
+    ARSENAL DE EVIDÊNCIAS COLETADAS (Pesquisa em tempo real):
     {contexto_cientifico}
+
+    BIBLIOTECA DE DIRETRIZES GERAIS (Escolha APENAS a que corresponde ao tema da matéria):
+    - [Higiene Geral e Cárie] American Dental Association (ADA): https://www.ada.org/resources/research/science-and-research-institute/oral-health-topics/
+    - [Periodontia e Gengiva] American Academy of Periodontology (AAP): https://www.perio.org/resource/periodontal-disease-clinical-practice-guidelines/
+    - [Endodontia e Canal] American Association of Endodontists (AAE): https://www.aae.org/specialty/clinical-resources/
+    - [Odontopediatria] American Academy of Pediatric Dentistry (AAPD): https://www.aapd.org/research/oral-health-policies--recommendations/
+    - [Cirurgia e Implantes] American Association of Oral and Maxillofacial Surgeons (AAOMS): https://www.aaoms.org/practice-resources/
 
     TEXTO DA MATÉRIA:
     {texto_materia}
 
-    FORMATO DE RESPOSTA:
+    FORMATO DE RESPOSTA OBRIGATÓRIO:
 
     ### 1. Resumo Técnico
     (Resumo objetivo)
 
     ### 2. Avaliação de Risco
-    (Aplique a regra rígida: Sem diretriz = 🟨 Potencial Risco)
+    (🟨 Potencial Risco | 🟥 Alto Risco | 🟩 Baixo Risco)
     
     ### 3. Justificativa de Auditoria
-    (Explique que, embora a fonte seja reputável, a conduta ainda não é consenso clínico nas associações de classe e não deve substituir o tratamento padrão.)
+    (Explique o confronto entre a notícia e as diretrizes.)
 
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
-    (Descreva o que a AAP/AAE/ADA recomenda como eficaz para este problema gengival/dentário. Foque no controle mecânico do biofilme e visitas regulares.)
+    Aqui você deve descrever o que é eficaz para o problema citado.
+    - Selecione mentalmente a especialidade correta na 'Biblioteca de Diretrizes Gerais' acima.
+    - Descreva o tratamento/conduta padrão. Ex: Se a matéria for sobre canal, descreva o padrão-ouro endodôntico e cite a [Fonte: AAE]. Se for cárie, cite a [Fonte: ADA].
 
-   ### 5. Referências e Links Oficiais
-    (SE o arsenal retornar "Nenhuma evidência", você OBRIGATORIAMENTE deve escrever o texto abaixo:
-    "Como não há diretrizes específicas sobre este novo estudo nas evidências coletadas, consulte as recomendações gerais de periodontia e saúde bucal em:
-    - American Academy of Periodontology (AAP): https://www.perio.org/
-    - American Dental Association (ADA): https://www.ada.org/
-    - American Association of Endodontists (AAE): https://www.aae.org/"
-    Se houver evidências no arsenal, liste os links reais que foram encontrados.)
+    ### 5. Referências e Links Oficiais
+    - Liste APENAS o link da 'Biblioteca de Diretrizes Gerais' que corresponde à especialidade da matéria.
+    - Além disso, liste os links encontrados no 'Arsenal de Evidências Coletadas' (se a pesquisa não vier vazia).
     """
     try:
-        # Mantendo temperature 0 para consistência total
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
         return f"Erro ao gerar resposta: {str(e)}"
-
+        
 # --- FUNÇÕES DE INTERFACE ---
 
 def extrair_links(texto):
