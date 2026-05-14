@@ -128,37 +128,42 @@ def buscar_referencias_confiaveis(palavras_chave):
 
 def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     prompt = f"""
-    VOCÊ É UM AUDITOR CIENTÍFICO DE ODONTOLOGIA ESTREITO E RIGOROSO.
-    Sua tarefa é comparar o 'Texto da Matéria' com o 'Arsenal de Evidências' (Diretrizes Oficiais).
+    VOCÊ É UM AUDITOR CIENTÍFICO DE ODONTOLOGIA EXTREMAMENTE RÍGIDO.
+    
+    CRITÉRIO DE JULGAMENTO OBRIGATÓRIO:
+    1. Se as 'Evidências Confiáveis' não contiverem uma diretriz específica sobre o tema, você DEVE classificar como 🟨 POTENCIAL RISCO. 
+    2. Nunca classifique como 'Baixo Risco' apenas porque a fonte é uma universidade ou jornal. Sem diretriz clínica = Risco de interpretação equivocada.
+    3. O foco do risco é: "O paciente pode substituir o tratamento padrão por essa nova informação?"
 
-    REGRA DE OURO: 
-    - Um estudo isolado (mesmo que sério) não é o mesmo que uma Diretriz Clínica Oficial.
-    - Se a matéria cita um estudo novo, mas a AAP/AAE ainda não o transformou em recomendação oficial, classifique como 'POTENCIAL RISCO' por falta de consenso, mas mencione a plausibilidade biológica.
-
-    ARSENAL DE EVIDÊNCIAS (Fonte: Google Search):
+    ARSENAL DE EVIDÊNCIAS COLETADAS:
     {contexto_cientifico}
 
     TEXTO DA MATÉRIA:
     {texto_materia}
 
-    FORMATO OBRIGATÓRIO DE RESPOSTA:
+    FORMATO DE RESPOSTA:
 
     ### 1. Resumo Técnico
-    (Breve resumo)
+    (Resumo objetivo)
 
     ### 2. Avaliação de Risco
-    (🟩 Baixo Risco | 🟨 Potencial Risco | 🟥 Alto Risco)
+    (Aplique a regra rígida: Sem diretriz = 🟨 Potencial Risco)
     
-    ### 3. Análise de Consenso Científico
-    (Explique se o que a matéria diz já é um consenso aceito pelas associações ou se é apenas uma descoberta isolada/especulativa).
+    ### 3. Justificativa de Auditoria
+    (Explique que, embora a fonte seja reputável, a conduta ainda não é consenso clínico nas associações de classe e não deve substituir o tratamento padrão.)
 
-    ### 4. Padrão-Ouro (Conduta Clínica Recomendada)
-    (Com base no arsenal, qual é o tratamento/hábito que a ciência JÁ CONSIDERA EFICAZ e seguro? Descreva a conduta padrão para o problema citado).
+    ### 4. Padrão-Ouro (Conduta Clínica Oficial)
+    (Descreva o que a AAP/AAE/ADA recomenda como eficaz para este problema gengival/dentário. Foque no controle mecânico do biofilme e visitas regulares.)
 
-    ### 5. Fontes e Referências para Verificação
-    (Links diretos para diretrizes da AAP, AAE, ADA ou similares que validam o Padrão-Ouro).
+    ### 5. Referências e Links Oficiais
+    (Mesmo que o tema específico não tenha sido encontrado, você DEVE listar os links das associações para as diretrizes de saúde periodontal/geral. 
+    Exemplos: 
+    - American Academy of Periodontology (perio.org)
+    - American Dental Association (ada.org)
+    - American Association of Endodontists (aae.org))
     """
     try:
+        # Mantendo temperature 0 para consistência total
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
