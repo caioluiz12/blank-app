@@ -25,7 +25,10 @@ st.set_page_config(
 
 # --- CONFIGURAÇÃO DAS APIs ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+# Só para descobrir os nomes disponíveis
+for m in genai.list_models():
+    if 'generateContent' in m.supported_generation_methods:
+        print(f"Modelo disponível: {m.name}")
 
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 SEARCH_ENGINE_ID = "c49cbaece0d6a4c06" # Seu ID exclusivo das associações
