@@ -27,20 +27,12 @@ st.set_page_config(
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # Isso aqui vai listar todos os modelos que a sua chave REALMENTE pode usar
-    modelos_disponiveis = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-    st.write(f"🔍 Modelos que sua chave autorizou: {modelos_disponiveis}")
+    # Definimos o modelo fixo agora que sabemos que ele funciona
+    # O 2.5-flash é excelente para o seu projeto FAPEMIG
+    model = genai.GenerativeModel("gemini-2.5-flash")
     
-    # Tenta pegar o primeiro da lista automaticamente para não dar erro de nome
-    if modelos_disponiveis:
-        nome_modelo = modelos_disponiveis[0].replace("models/", "")
-        model = genai.GenerativeModel(nome_modelo)
-        st.success(f"✅ Usando o modelo: {nome_modelo}")
-    else:
-        st.error("❌ Sua chave de API não tem acesso a nenhum modelo de geração. Verifique o Google AI Studio.")
-
 except Exception as e:
-    st.error(f"Erro crítico de configuração: {e}")
+    st.error(f"Erro na conexão com a IA. Por favor, verifique as chaves de API.")
 
 GOOGLE_SEARCH_API_KEY = st.secrets["GOOGLE_SEARCH_API_KEY"]
 SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
@@ -117,26 +109,35 @@ def buscar_referencias_confiaveis(palavras_chave):
         return f"Erro na busca: {str(e)}"
 
 def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
-    """Gera a análise com o modelo Gemini blindado contra alucinações."""
+    """Gera a análise técnica confrontando a matéria com o padrão-ouro científico."""
     prompt = f"""
-    Você é um auditor científico especializado em odontologia baseada em evidências.
-    Avalie o Risco de Desinformação do "Texto da Matéria" usando EXCLUSIVAMENTE as "Evidências Confiáveis" listadas abaixo.
+    Você é um auditor científico sênior em Odontologia. 
+    Sua missão é confrontar o 'Texto da Matéria' com as 'Evidências Confiáveis' coletadas.
 
-    Evidências Confiáveis (Extraídas das diretrizes oficiais AAE, AAP, AAPD, etc.):
+    ARSENAL DE EVIDÊNCIAS (Diretrizes Oficiais):
     {contexto_cientifico}
 
-    Texto da Matéria a ser verificado:
+    TEXTO DA MATÉRIA A SER ANALISADO:
     {texto_materia}
 
-    Regras OBRIGATÓRIAS:
-    1. Baseie sua resposta APENAS nas "Evidências Confiáveis" fornecidas acima.
-    2. NUNCA invente links, autores ou artigos de fora das evidências fornecidas.
-    3. Se as evidências não abordarem o tema da matéria, não tente adivinhar. Declare que não há dados suficientes no arsenal para verificar.
+    RETORNE RIGOROSAMENTE NESTE FORMATO:
     
-    Retorne os seguintes itens de forma objetiva:
-    1. Um resumo técnico do conteúdo.
-    2. Avaliação do risco de desinformação: 'Baixo risco', 'Potencial risco' ou 'Alto risco'.
-    3. Justificativa com base científica (CITE OBRIGATORIAMENTE os links das Evidências Confiáveis que sustentam sua decisão).
+    ### 1. Resumo Técnico
+    (Breve resumo dos pontos principais da matéria)
+
+    ### 2. Avaliação de Risco
+    (Classifique em: 🟩 Baixo Risco, 🟨 Potencial Risco ou 🟥 Alto Risco)
+
+    ### 3. Justificativa Científica
+    (Explique por que a matéria é confiável ou perigosa com base no confronto de dados)
+
+    ### 4. Padrão-Ouro: O que é Realmente Eficaz?
+    (Com base nas diretrizes das associações odontológicas presentes no arsenal:
+    - Descreva a conduta clínica, tratamento ou diagnóstico que é considerado o padrão-ouro para este caso.
+    - Se a matéria propõe algo ineficaz, explique o que as diretrizes recomendam fazer em vez disso.)
+
+    ### 5. Referências e Links Oficiais
+    (Liste os links das evidências do arsenal que sustentam a conduta correta descrita acima.)
     """
     try:
         resposta = model.generate_content(prompt)
@@ -168,6 +169,8 @@ def destacar_risco(resultado):
         cor = "#32CD32"
         risco = "🟩 Baixo risco de desinformação"
     return f'<div style="background-color:{cor};padding:10px;border-radius:8px;font-weight:bold;margin-bottom:15px">{risco}</div>'
+
+
 
 # --- EXECUÇÃO DA ANÁLISE ---
 if st.button("🔍 Analisar conteúdo"):
