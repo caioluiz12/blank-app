@@ -32,7 +32,7 @@ try:
         "temperature": 0.0,
         "top_p": 0.95,
         "top_k": 0,
-        "max_output_tokens": 2048,
+        "max_output_tokens": 8192,
     }
 
     model = genai.GenerativeModel(
@@ -146,12 +146,13 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
     (Descreva o que a AAP/AAE/ADA recomenda como eficaz para este problema gengival/dentário. Foque no controle mecânico do biofilme e visitas regulares.)
 
-    ### 5. Referências e Links Oficiais
-    (Mesmo que o tema específico não tenha sido encontrado, você DEVE listar os links das associações para as diretrizes de saúde periodontal/geral. 
-    Exemplos: 
-    - American Academy of Periodontology (perio.org)
-    - American Dental Association (ada.org)
-    - American Association of Endodontists (aae.org))
+   ### 5. Referências e Links Oficiais
+    (SE o arsenal retornar "Nenhuma evidência", você OBRIGATORIAMENTE deve escrever o texto abaixo:
+    "Como não há diretrizes específicas sobre este novo estudo nas evidências coletadas, consulte as recomendações gerais de periodontia e saúde bucal em:
+    - American Academy of Periodontology (AAP): https://www.perio.org/
+    - American Dental Association (ADA): https://www.ada.org/
+    - American Association of Endodontists (AAE): https://www.aae.org/"
+    Se houver evidências no arsenal, liste os links reais que foram encontrados.)
     """
     try:
         # Mantendo temperature 0 para consistência total
