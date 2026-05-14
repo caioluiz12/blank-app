@@ -119,12 +119,15 @@ def buscar_referencias_confiaveis(palavras_chave):
 
 def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     prompt = f"""
-    VOCÊ É UM AUDITOR CIENTÍFICO DE ODONTOLOGIA EXTREMAMENTE RÍGIDO.
-    
-    ARSENAL DE EVIDÊNCIAS COLETADAS (Pesquisa em tempo real):
-    {contexto_cientifico}
+    VOCÊ ESTÁ EM MODO DE AUDITORIA EXTREMA (ZERO TOLERÂNCIA).
+    Sua única fonte de verdade é a 'BIBLIOTECA DE DIRETRIZES OFICIAIS' e o 'ARSENAL DE EVIDÊNCIAS'.
 
-    BIBLIOTECA DE DIRETRIZES OFICIAIS (Escolha APENAS a que corresponde ao tema da matéria):
+    Siga este protocolo de raciocínio antes de responder:
+    PASSO 1: Identifique a especialidade central da matéria.
+    PASSO 2: Verifique se há uma diretriz específica no 'Arsenal' ou na 'Biblioteca' para a alegação da matéria.
+    PASSO 3: Se a alegação NÃO estiver explicitamente validada nos links fornecidos, ela é automaticamente considerada NÃO COMPROVADA, independentemente da fonte da notícia.
+
+    BIBLIOTECA DE DIRETRIZES OFICIAIS (FONTE ÚNICA):
     - [Endodontia]: https://www.aae.org/specialty/clinical-resources/guidelines-position-statements/
     - [Periodontia, Implantodontia]: https://aap.onlinelibrary.wiley.com/doi/toc/10.1002/19433670.aap-clin-sci-papers?page=1
     - [Cirurgia]: https://aaoms.org/publications/position-papers/clinical-papers/
@@ -132,10 +135,23 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     - [Ortodontia]: https://www2.aaoinfo.org/advocacy/advocacy-efforts/orthofacts/
     - [Reabilitação]: https://www.theaapd.org/research_awards/research/research_committee_publications/
 
+    ARSENAL DE EVIDÊNCIAS COLETADAS:
+    {contexto_cientifico}
+
     TEXTO DA MATÉRIA:
     {texto_materia}
 
-    FORMATO DE RESPOSTA OBRIGATÓRIO:
+    REGRAS INVIOLÁVEIS:
+    1. PROIBIDO usar conhecimento prévio sobre estudos universitários se eles não forem diretrizes de associações.
+    2. Se a biblioteca não confirmar a eficácia, o risco é 🟨 POTENCIAL RISCO ou 🟥 ALTO RISCO. Nunca Verde.
+    3. O 'Padrão-Ouro' deve ser extraído apenas do link da especialidade correspondente.
+
+    FORMATO DE RESPOSTA:
+
+    ### 🛡️ PARECER DE AUDITORIA INTERNA
+    - Especialidade identificada: 
+    - Link da Biblioteca utilizado:
+    - A alegação da matéria consta no link? (Sim/Não)
 
     ### 1. Resumo Técnico
     (Resumo objetivo)
@@ -144,20 +160,18 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     (🟨 Potencial Risco | 🟥 Alto Risco | 🟩 Baixo Risco)
     
     ### 3. Justificativa de Auditoria
-    (Explique o confronto entre a notícia e as diretrizes.)
+    (Confronte: "A matéria diz X, mas a biblioteca oficial na especialidade Y não lista X como procedimento padrão".)
 
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
-    Aqui você deve descrever o que é eficaz para o problema citado.
-    - Selecione mentalmente a especialidade correta na 'Biblioteca de Diretrizes Oficiais' acima.
-    - Descreva o tratamento/conduta padrão. 
+    (Descreva apenas o que está no catálogo da associação escolhida.)
 
     ### 5. Referências e Diretrizes Oficiais
-    - Liste o link da 'Biblioteca de Diretrizes Oficiais' correspondente à especialidade.
-    - OBRIGATÓRIO: Adicione a seguinte nota explicativa logo abaixo do link: 
-    *(Nota: O link acima direciona para o catálogo oficial de diretrizes e documentos clínicos da associação, onde o embasamento para o padrão-ouro descrito pode ser consultado na íntegra).*
-    - Liste também qualquer outro link útil que tenha vindo do 'Arsenal de Evidências Coletadas'.
+    - 📂 **Catálogo Oficial da Especialidade:** [Insira o link da biblioteca correspondente]
+    - 📄 **Documento Padrão-Ouro:** (Escreva o NOME EXATO da diretriz, manual ou 'Position Paper' oficial da associação que o usuário deve buscar dentro do catálogo acima para confirmar a conduta. Ex: "Parameters of Care", "Clinical Practice Guideline on...").
+    - 🔗 **Links Específicos Coletados:** (Se o 'Arsenal de Evidências' retornou algum link real que confirme a conduta, liste-o aqui. Caso o arsenal esteja vazio sobre o padrão-ouro, escreva: "A busca atual não retornou links diretos; consulte o documento nomeado acima no catálogo oficial.")
     """
     try:
+        # Temperature 0.0 é o que garante que ela não "fuja" da biblioteca
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
