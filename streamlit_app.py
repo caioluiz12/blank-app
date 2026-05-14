@@ -27,24 +27,13 @@ st.set_page_config(
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # Definimos o modelo fixo agora que sabemos que ele funciona
-    # O 2.5-flash é excelente para o seu projeto FAPEMIG
-    model = genai.GenerativeModel("gemini-2.5-flash")
-    
-except Exception as e:
-    st.error(f"Erro na conexão com a IA. Por favor, verifique as chaves de API.")
-
-GOOGLE_SEARCH_API_KEY = st.secrets["GOOGLE_SEARCH_API_KEY"]
-SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
-
-# CONFIGURAÇÃO DE PRECISÃO: 
-    # temperature=0.0 torna a resposta determinística (sempre igual)
-    # top_p=0.95 garante que ela escolha as palavras mais prováveis tecnicamente
+    # Esta parte abaixo DEVE estar alinhada (4 espaços para a direita)
     config_geracao = {
         "temperature": 0.0,
         "top_p": 0.95,
         "top_k": 0,
-        "max_output_tokens": 2048,}
+        "max_output_tokens": 2048,
+    }
 
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
@@ -52,7 +41,10 @@ SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
     )
     
 except Exception as e:
-    st.error(f"Erro na conexão com a IA.")
+    st.error(f"Erro na conexão com a IA: {e}")
+
+GOOGLE_SEARCH_API_KEY = st.secrets["GOOGLE_SEARCH_API_KEY"]
+SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
 
 # --- TÍTULO E INTRODUÇÃO ---
 st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
