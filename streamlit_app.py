@@ -159,7 +159,7 @@ if st.button("🔍 Analisar conteúdo"):
     if not user_input.strip():
         st.warning("Por favor, insira um link ou texto para análise.")
     else:
-        with st.spinner("Extraindo e processando texto..."):
+        with st.spinner("1/3 - Extraindo texto da fonte..."):
             texto_extraido = user_input
             if input_type == "🔗 Link de notícia":
                 texto_extraido = extrair_texto(user_input)
@@ -167,45 +167,37 @@ if st.button("🔍 Analisar conteúdo"):
         if "Erro" in texto_extraido:
             st.error(texto_extraido)
         else:
-            # TRAVA 1: Limita o texto aos primeiros 3000 caracteres para economizar tokens (cota livre)
-            texto_limitado = texto_extraido[:3000] 
-            
-            with st.spinner("Extraindo palavras-chave..."):
-                palavras_chave = obter_palavras_chave(texto_limitado)
-                
-            with st.spinner("Buscando evidências nas diretrizes oficiais (Google Search)..."):
-                evidencias = buscar_referencias_confiaveis(palavras_chave)
-                
-            with st.spinner("Aguardando 8s por segurança (Evitando limite da API Gratuita)..."):
-                # TRAVA 2: Pausa de 8 segundos para evitar o Erro 429 de excesso de requisições
-                time.sleep(8)
-                
-            with st.spinner("Avaliando risco de desinformação com IA..."):
-                # Enviamos o texto limitado para a análise final
-                resultado = gerar_analise_desinformacao(texto_limitado, evidencias)
-                
-                # Se a API ainda assim retornar erro, ele avisa na tela ao invés de quebrar
-                if "Erro" in resultado:
-                    st.error(resultado)
-                else:
-                    destaque_html = destacar_risco(resultado)
-                    links_extraidos = extrair_links(resultado)
-                    resultado_com_links = transformar_links_em_html(resultado)
+            # Reduzimos o texto para o Gemini não achar que é abuso de volume
+            texto_curto = texto_extraido[:2000] 
 
-                    # Renderização dos resultados
-                    st.markdown("### Resultado da Análise IA:")
-                    st.markdown(destaque_html, unsafe_allow_html=True)
-                    st.markdown(resultado_com_links, unsafe_allow_html=True)
+            # Passo 1: Busca no Google (Isso não gasta cota do Gemini)
+            with st.spinner("2/3 - Consultando diretrizes odontológicas oficiais..."):
+                # Usamos os primeiros 100 caracteres como busca simples para evitar 1 chamada de IA
+                busca_simples = texto_curto[:100]
+                evidencias = buscar_referencias_confiaveis(busca_simples)
+                
+            # Passo 2: O Grande Segredo - Pausa longa para resetar o limite por minuto
+            with st.spinner("Aguardando estabilização da API (15 segundos)..."):
+                time.sleep(15) 
+                
+            with st.spinner("3/3 - IA avaliando evidências..."):
+                try:
+                    resultado = gerar_analise_desinformacao(texto_curto, evidencias)
+                    
+                    if "429" in resultado or "quota" in resultado.lower():
+                        st.error("O Google ainda está limitando as requisições. Aguarde 1 minuto e tente novamente.")
+                    else:
+                        destaque_html = destacar_risco(resultado)
+                        resultado_com_links = transformar_links_em_html(resultado)
 
-                    # Acordeão de Transparência (Opcional, mas muito bom para projetos acadêmicos)
-                    with st.expander("Ver Bastidores da Checagem (Transparência)"):
-                        st.markdown(f"**Palavras-chave pesquisadas:** `{palavras_chave}`")
-                        st.markdown("**Evidências encontradas no buscador:**")
-                        st.text(evidencias)
+                        st.markdown("### Resultado da Análise IA:")
+                        st.markdown(destaque_html, unsafe_allow_html=True)
+                        st.markdown(resultado_com_links, unsafe_allow_html=True)
 
-                    st.markdown("---")
-                    opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
-                    st.markdown(f"**Sua resposta:** {opiniao}")
+                        with st.expander("Ver Referências Encontradas"):
+                            st.text(evidencias)
+                except Exception as e:
+                    st.error(f"Erro inesperado: {e}")
 
 st.markdown("---")
 st.markdown("Desenvolvido por Caio — Projeto FAPEMIG 🧠🔬")
