@@ -167,11 +167,11 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
 
    ### 5. Referências e Diretrizes Oficiais
     - 📂 **Catálogo(s) Oficial(is):** [Liste o(s) link(s) da(s) especialidade(s) selecionada(s)]
-    - 📄 **Documento Padrão-Ouro Recomendado:** (Identifique o NOME EXATO do documento oficial da associação. Para evitar links quebrados, você DEVE gerar um link de busca restrita do Google usando o formato Markdown abaixo:
-    [Nome do Documento Oficial](https://www.google.com/search?q=site:DOMINIO_DA_ASSOCIACAO.org+"NOME+DO+DOCUMENTO")
-    Exemplo: [Clinical Practice Guideline on Fluoride Therapy](https://www.google.com/search?q=site:aapd.org+"Clinical+Practice+Guideline+on+Fluoride+Therapy")
-    Logo abaixo, explique brevemente: "Este documento rege o tratamento aceito para [Condição Clínica], o qual deve ser usado como base de comparação.")
-    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca em tempo real não retornou links diretos confirmando a intervenção da matéria; clique no link do Documento Padrão-Ouro acima para ler a recomendação oficial.")
+    - 📄 **Documento Padrão-Ouro Recomendado:** (Escreva o NOME EXATO do documento oficial da associação. Em seguida, crie um link de busca simples do Google usando o nome do documento e a sigla da associação. 
+    FORMATO OBRIGATÓRIO: [Nome do Documento](https://www.google.com/search?q=Nome+do+Documento+SiglaDaAssociacao)
+    Exemplo: [Clinical Practice Guideline on Fluoride Therapy](https://www.google.com/search?q=Clinical+Practice+Guideline+on+Fluoride+Therapy+AAPD). 
+    Logo abaixo, explique brevemente por que este é o documento de referência).
+    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca em tempo real não retornou links diretos confirmando a intervenção; utilize o link de busca acima para ler a recomendação oficial.")
     """
     try:
         resposta = model.generate_content(prompt)
