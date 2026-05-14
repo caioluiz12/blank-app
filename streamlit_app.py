@@ -24,11 +24,26 @@ st.set_page_config(
 )
 
 # --- CONFIGURAÇÃO DAS APIs ---
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash-8b")
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    
+    # Isso aqui vai listar todos os modelos que a sua chave REALMENTE pode usar
+    modelos_disponiveis = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    st.write(f"🔍 Modelos que sua chave autorizou: {modelos_disponiveis}")
+    
+    # Tenta pegar o primeiro da lista automaticamente para não dar erro de nome
+    if modelos_disponiveis:
+        nome_modelo = modelos_disponiveis[0].replace("models/", "")
+        model = genai.GenerativeModel(nome_modelo)
+        st.success(f"✅ Usando o modelo: {nome_modelo}")
+    else:
+        st.error("❌ Sua chave de API não tem acesso a nenhum modelo de geração. Verifique o Google AI Studio.")
 
-GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
-SEARCH_ENGINE_ID = "c49cbaece0d6a4c06" # Seu ID exclusivo das associações
+except Exception as e:
+    st.error(f"Erro crítico de configuração: {e}")
+
+GOOGLE_SEARCH_API_KEY = st.secrets["GOOGLE_SEARCH_API_KEY"]
+SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
 
 # --- TÍTULO E INTRODUÇÃO ---
 st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
