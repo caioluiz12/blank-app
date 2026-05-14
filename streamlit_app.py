@@ -37,6 +37,24 @@ except Exception as e:
 GOOGLE_SEARCH_API_KEY = st.secrets["GOOGLE_SEARCH_API_KEY"]
 SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
 
+# CONFIGURAÇÃO DE PRECISÃO: 
+    # temperature=0.0 torna a resposta determinística (sempre igual)
+    # top_p=0.95 garante que ela escolha as palavras mais prováveis tecnicamente
+    config_geracao = {
+        "temperature": 0.0,
+        "top_p": 0.95,
+        "top_k": 0,
+        "max_output_tokens": 2048,
+    }
+
+    model = genai.GenerativeModel(
+        model_name="gemini-2.5-flash",
+        generation_config=config_geracao
+    )
+    
+except Exception as e:
+    st.error(f"Erro na conexão com a IA.")
+
 # --- TÍTULO E INTRODUÇÃO ---
 st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
 st.markdown("""
@@ -109,41 +127,42 @@ def buscar_referencias_confiaveis(palavras_chave):
         return f"Erro na busca: {str(e)}"
 
 def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
-    """Gera a análise técnica confrontando a matéria com o padrão-ouro científico."""
     prompt = f"""
-    Você é um auditor científico sênior em Odontologia. 
-    Sua missão é confrontar o 'Texto da Matéria' com as 'Evidências Confiáveis' coletadas.
+    VOCÊ É UM AUDITOR CIENTÍFICO DE ODONTOLOGIA ESTREITO E RIGOROSO.
+    Sua tarefa é comparar o 'Texto da Matéria' com o 'Arsenal de Evidências' (Diretrizes Oficiais).
 
-    ARSENAL DE EVIDÊNCIAS (Diretrizes Oficiais):
+    REGRA DE OURO: 
+    - Um estudo isolado (mesmo que sério) não é o mesmo que uma Diretriz Clínica Oficial.
+    - Se a matéria cita um estudo novo, mas a AAP/AAE ainda não o transformou em recomendação oficial, classifique como 'POTENCIAL RISCO' por falta de consenso, mas mencione a plausibilidade biológica.
+
+    ARSENAL DE EVIDÊNCIAS (Fonte: Google Search):
     {contexto_cientifico}
 
-    TEXTO DA MATÉRIA A SER ANALISADO:
+    TEXTO DA MATÉRIA:
     {texto_materia}
 
-    RETORNE RIGOROSAMENTE NESTE FORMATO:
-    
+    FORMATO OBRIGATÓRIO DE RESPOSTA:
+
     ### 1. Resumo Técnico
-    (Breve resumo dos pontos principais da matéria)
+    (Breve resumo)
 
     ### 2. Avaliação de Risco
-    (Classifique em: 🟩 Baixo Risco, 🟨 Potencial Risco ou 🟥 Alto Risco)
+    (🟩 Baixo Risco | 🟨 Potencial Risco | 🟥 Alto Risco)
+    
+    ### 3. Análise de Consenso Científico
+    (Explique se o que a matéria diz já é um consenso aceito pelas associações ou se é apenas uma descoberta isolada/especulativa).
 
-    ### 3. Justificativa Científica
-    (Explique por que a matéria é confiável ou perigosa com base no confronto de dados)
+    ### 4. Padrão-Ouro (Conduta Clínica Recomendada)
+    (Com base no arsenal, qual é o tratamento/hábito que a ciência JÁ CONSIDERA EFICAZ e seguro? Descreva a conduta padrão para o problema citado).
 
-    ### 4. Padrão-Ouro: O que é Realmente Eficaz?
-    (Com base nas diretrizes das associações odontológicas presentes no arsenal:
-    - Descreva a conduta clínica, tratamento ou diagnóstico que é considerado o padrão-ouro para este caso.
-    - Se a matéria propõe algo ineficaz, explique o que as diretrizes recomendam fazer em vez disso.)
-
-    ### 5. Referências e Links Oficiais
-    (Liste os links das evidências do arsenal que sustentam a conduta correta descrita acima.)
+    ### 5. Fontes e Referências para Verificação
+    (Links diretos para diretrizes da AAP, AAE, ADA ou similares que validam o Padrão-Ouro).
     """
     try:
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
-        return f"Erro ao gerar resposta do Gemini: {str(e)}"
+        return f"Erro ao gerar resposta: {str(e)}"
 
 # --- FUNÇÕES DE INTERFACE ---
 
