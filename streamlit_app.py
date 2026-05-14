@@ -44,8 +44,7 @@ SEARCH_ENGINE_ID = "c49cbaece0d6a4c06"
         "temperature": 0.0,
         "top_p": 0.95,
         "top_k": 0,
-        "max_output_tokens": 2048,
-    }
+        "max_output_tokens": 2048,}
 
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
