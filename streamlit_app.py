@@ -2,7 +2,8 @@
 # Detector de Desinformação Odonto - Streamlit App
 # Autor: Caio Luiz Bitencourt Reis
 # Descrição: Aplicativo para análise de risco de desinformação
-# em conteúdos odontológicos, com integração à API Gemini.
+# em conteúdos odontológicos, com integração à API Gemini e 
+# Google Custom Search (RAG).
 # ============================================================
 
 # --- IMPORTAÇÕES ---
@@ -21,15 +22,18 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# --- CONFIGURAÇÃO DO GEMINI ---
+# --- CONFIGURAÇÃO DAS APIs ---
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.0-flash")
+
+GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
+SEARCH_ENGINE_ID = "c49cbaece0d6a4c06" # Seu ID exclusivo das associações
 
 # --- TÍTULO E INTRODUÇÃO ---
 st.title("🦷 Detector de Desinformação em Odontologia (via Gemini ✨)")
 st.markdown("""
 Este aplicativo tem como objetivo **identificar e classificar conteúdos com risco de desinformação**
-em textos sobre Odontologia, com base em evidências científicas reais.
+em textos sobre Odontologia, com base EXCLUSIVA em diretrizes oficiais (AAE, AAP, AAOMS, AAPD, etc.).
 Cole um link ou texto abaixo para análise.
 """)
 
@@ -45,7 +49,7 @@ if input_type == "🔗 Link de notícia":
 else:
     user_input = st.text_area("Cole o texto a ser analisado:", height=200)
 
-# --- FUNÇÕES ---
+# --- FUNÇÕES CORE ---
 
 def extrair_texto(url):
     """Extrai o texto principal de uma página web."""
@@ -58,29 +62,73 @@ def extrair_texto(url):
     except Exception as e:
         return f"Erro ao acessar o link: {str(e)}"
 
-def gerar_analise_desinformacao(texto):
-    """Gera a análise com o modelo Gemini."""
-    prompt = (
-        "Você é uma inteligência artificial especializada em checagem científica."
-        " Receberá o texto de uma matéria sobre odontologia e deve avaliá-lo cientificamente."
-        " Busque referências científicas confiáveis (como PubMed, Cochrane, etc.) para sustentar sua avaliação."
-        " Para encontrar artigos científicos relevantes, extraia os principais termos do texto (em português), traduza para o inglês, "
-        "e pesquise usando palavras-chave no estilo: 'substance name AND dental health', 'ingredient AND tooth whitening', ou 'abrasion AND enamel'."
-        " Utilize o site https://pubmed.ncbi.nlm.nih.gov/ e, se possível, inclua links diretos para os estudos."
-        " Mesmo que os artigos estejam atrás de paywall, forneça os títulos, autores, ano, base (ex: PubMed) e links."
-        " Retorne os seguintes itens:\n"
-        "1. Um resumo técnico do conteúdo.\n"
-        "2. Avaliação do risco de desinformação: 'Baixo risco', 'Potencial risco' ou 'Alto risco'.\n"
-        "3. Justificativa com base científica (cite pelo menos 1 a 2 fontes reais com links clicáveis).\n"
-        "\nTexto da matéria:\n"
-        f"{texto}\n"
-        "\nRetorne apenas os três itens solicitados, de forma objetiva."
-    )
+def obter_palavras_chave(texto):
+    """Usa o Gemini para extrair palavras-chave em inglês focadas em odontologia."""
+    prompt = f"""
+    Extraia de 3 a 4 palavras-chave em inglês que representem o tema clínico principal deste texto odontológico.
+    Retorne APENAS as palavras-chave separadas por espaço (ex: fluoride tooth decay prevention).
+    Texto: {texto[:2000]}
+    """
+    try:
+        return model.generate_content(prompt).text.strip()
+    except:
+        return "dental health dentistry" # Fallback em caso de erro
+
+def buscar_referencias_confiaveis(palavras_chave):
+    """Busca evidências usando o Google Custom Search configurado."""
+    if not GOOGLE_SEARCH_API_KEY:
+        return "ERRO: Chave da API do Google (GOOGLE_SEARCH_API_KEY) não configurada."
+        
+    url = f"https://www.googleapis.com/customsearch/v1?q={palavras_chave}&key={GOOGLE_SEARCH_API_KEY}&cx={SEARCH_ENGINE_ID}"
+    
+    try:
+        resposta = requests.get(url)
+        dados = resposta.json()
+        
+        if "items" not in dados:
+            return "Nenhuma evidência encontrada no arsenal de associações para este tema."
+            
+        referencias = ""
+        # Pega os 4 primeiros resultados retornados pelo buscador restrito
+        for item in dados["items"][:4]:
+            titulo = item.get("title")
+            snippet = item.get("snippet")
+            link = item.get("link")
+            referencias += f"- TÍTULO: {titulo}\n- RESUMO: {snippet}\n- LINK OFICIAL: {link}\n\n"
+            
+        return referencias
+    except Exception as e:
+        return f"Erro na busca: {str(e)}"
+
+def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
+    """Gera a análise com o modelo Gemini blindado contra alucinações."""
+    prompt = f"""
+    Você é um auditor científico especializado em odontologia baseada em evidências.
+    Avalie o Risco de Desinformação do "Texto da Matéria" usando EXCLUSIVAMENTE as "Evidências Confiáveis" listadas abaixo.
+
+    Evidências Confiáveis (Extraídas das diretrizes oficiais AAE, AAP, AAPD, etc.):
+    {contexto_cientifico}
+
+    Texto da Matéria a ser verificado:
+    {texto_materia}
+
+    Regras OBRIGATÓRIAS:
+    1. Baseie sua resposta APENAS nas "Evidências Confiáveis" fornecidas acima.
+    2. NUNCA invente links, autores ou artigos de fora das evidências fornecidas.
+    3. Se as evidências não abordarem o tema da matéria, não tente adivinhar. Declare que não há dados suficientes no arsenal para verificar.
+    
+    Retorne os seguintes itens de forma objetiva:
+    1. Um resumo técnico do conteúdo.
+    2. Avaliação do risco de desinformação: 'Baixo risco', 'Potencial risco' ou 'Alto risco'.
+    3. Justificativa com base científica (CITE OBRIGATORIAMENTE os links das Evidências Confiáveis que sustentam sua decisão).
+    """
     try:
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
         return f"Erro ao gerar resposta do Gemini: {str(e)}"
+
+# --- FUNÇÕES DE INTERFACE ---
 
 def extrair_links(texto):
     """Extrai links da resposta do modelo."""
@@ -103,40 +151,45 @@ def destacar_risco(resultado):
     else:
         cor = "#32CD32"
         risco = "🟩 Baixo risco de desinformação"
-    return f'<div style="background-color:{cor};padding:10px;border-radius:8px;font-weight:bold">{risco}</div>'
+    return f'<div style="background-color:{cor};padding:10px;border-radius:8px;font-weight:bold;margin-bottom:15px">{risco}</div>'
 
 # --- EXECUÇÃO DA ANÁLISE ---
 if st.button("🔍 Analisar conteúdo"):
     if not user_input.strip():
         st.warning("Por favor, insira um link ou texto para análise.")
     else:
-        with st.spinner("Analisando o conteúdo com IA..."):
+        with st.spinner("Extraindo texto..."):
             texto_extraido = user_input
             if input_type == "🔗 Link de notícia":
                 texto_extraido = extrair_texto(user_input)
 
-            if "Erro" in texto_extraido:
-                st.error(texto_extraido)
-            else:
-                resultado = gerar_analise_desinformacao(texto_extraido)
+        if "Erro" in texto_extraido:
+            st.error(texto_extraido)
+        else:
+            with st.spinner("Buscando evidências nas diretrizes oficiais..."):
+                palavras_chave = obter_palavras_chave(texto_extraido)
+                evidencias = buscar_referencias_confiaveis(palavras_chave)
+                
+            with st.spinner("Avaliando risco de desinformação com IA..."):
+                resultado = gerar_analise_desinformacao(texto_extraido, evidencias)
                 destaque_html = destacar_risco(resultado)
                 links_extraidos = extrair_links(resultado)
                 resultado_com_links = transformar_links_em_html(resultado)
 
-                st.markdown("### Resultado da Análise IA:")
-                st.markdown(destaque_html, unsafe_allow_html=True)
-                st.markdown(resultado_com_links, unsafe_allow_html=True)
+            # Renderização dos resultados
+            st.markdown("### Resultado da Análise IA:")
+            st.markdown(destaque_html, unsafe_allow_html=True)
+            st.markdown(resultado_com_links, unsafe_allow_html=True)
 
-                st.markdown("#### Referências Científicas Citadas:")
-                if links_extraidos:
-                    for link in links_extraidos:
-                        st.markdown(f"- [Acessar referência]({link})")
-                else:
-                    st.markdown("_Nenhuma referência científica com link foi identificada pela IA._")
+            # Acordeão de Transparência (Opcional, mas muito bom para projetos acadêmicos)
+            with st.expander("Ver Bastidores da Checagem (Transparência)"):
+                st.markdown(f"**Palavras-chave pesquisadas:** `{palavras_chave}`")
+                st.markdown("**Evidências encontradas no buscador:**")
+                st.text(evidencias)
 
-                st.markdown("---")
-                opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
-                st.markdown(f"**Sua resposta:** {opiniao}")
+            st.markdown("---")
+            opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
+            st.markdown(f"**Sua resposta:** {opiniao}")
 
 st.markdown("---")
 st.markdown("Desenvolvido por Caio — Projeto FAPEMIG 🧠🔬")
