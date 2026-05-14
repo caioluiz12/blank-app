@@ -124,12 +124,13 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     ARSENAL DE EVIDÊNCIAS COLETADAS (Pesquisa em tempo real):
     {contexto_cientifico}
 
-    BIBLIOTECA DE DIRETRIZES GERAIS (Escolha APENAS a que corresponde ao tema da matéria):
-    - [Higiene Geral e Cárie] American Dental Association (ADA): https://www.ada.org/resources/research/science-and-research-institute/oral-health-topics/
-    - [Periodontia e Gengiva] American Academy of Periodontology (AAP): https://www.perio.org/resource/periodontal-disease-clinical-practice-guidelines/
-    - [Endodontia e Canal] American Association of Endodontists (AAE): https://www.aae.org/specialty/clinical-resources/
-    - [Odontopediatria] American Academy of Pediatric Dentistry (AAPD): https://www.aapd.org/research/oral-health-policies--recommendations/
-    - [Cirurgia e Implantes] American Association of Oral and Maxillofacial Surgeons (AAOMS): https://www.aaoms.org/practice-resources/
+    BIBLIOTECA DE DIRETRIZES OFICIAIS (Escolha APENAS a que corresponde ao tema da matéria):
+    - [Endodontia]: https://www.aae.org/specialty/clinical-resources/guidelines-position-statements/
+    - [Periodontia, Implantodontia]: https://aap.onlinelibrary.wiley.com/doi/toc/10.1002/19433670.aap-clin-sci-papers?page=1
+    - [Cirurgia]: https://aaoms.org/publications/position-papers/clinical-papers/
+    - [Odontopediatria]: https://www.aapd.org/research/oral-health-policies--recommendations/
+    - [Ortodontia]: https://www2.aaoinfo.org/advocacy/advocacy-efforts/orthofacts/
+    - [Reabilitação]: https://www.theaapd.org/research_awards/research/research_committee_publications/
 
     TEXTO DA MATÉRIA:
     {texto_materia}
@@ -147,12 +148,14 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
 
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
     Aqui você deve descrever o que é eficaz para o problema citado.
-    - Selecione mentalmente a especialidade correta na 'Biblioteca de Diretrizes Gerais' acima.
-    - Descreva o tratamento/conduta padrão. Ex: Se a matéria for sobre canal, descreva o padrão-ouro endodôntico e cite a [Fonte: AAE]. Se for cárie, cite a [Fonte: ADA].
+    - Selecione mentalmente a especialidade correta na 'Biblioteca de Diretrizes Oficiais' acima.
+    - Descreva o tratamento/conduta padrão. 
 
-    ### 5. Referências e Links Oficiais
-    - Liste APENAS o link da 'Biblioteca de Diretrizes Gerais' que corresponde à especialidade da matéria.
-    - Além disso, liste os links encontrados no 'Arsenal de Evidências Coletadas' (se a pesquisa não vier vazia).
+    ### 5. Referências e Diretrizes Oficiais
+    - Liste o link da 'Biblioteca de Diretrizes Oficiais' correspondente à especialidade.
+    - OBRIGATÓRIO: Adicione a seguinte nota explicativa logo abaixo do link: 
+    *(Nota: O link acima direciona para o catálogo oficial de diretrizes e documentos clínicos da associação, onde o embasamento para o padrão-ouro descrito pode ser consultado na íntegra).*
+    - Liste também qualquer outro link útil que tenha vindo do 'Arsenal de Evidências Coletadas'.
     """
     try:
         resposta = model.generate_content(prompt)
