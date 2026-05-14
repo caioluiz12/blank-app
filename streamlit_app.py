@@ -7,6 +7,7 @@
 # ============================================================
 
 # --- IMPORTAÇÕES ---
+import time # <- Garanta que isso está na primeira linha do seu arquivo junto com os outros imports
 import streamlit as st
 import requests
 import re
@@ -158,7 +159,7 @@ if st.button("🔍 Analisar conteúdo"):
     if not user_input.strip():
         st.warning("Por favor, insira um link ou texto para análise.")
     else:
-        with st.spinner("Extraindo texto..."):
+        with st.spinner("Extraindo e processando texto..."):
             texto_extraido = user_input
             if input_type == "🔗 Link de notícia":
                 texto_extraido = extrair_texto(user_input)
@@ -166,30 +167,45 @@ if st.button("🔍 Analisar conteúdo"):
         if "Erro" in texto_extraido:
             st.error(texto_extraido)
         else:
-            with st.spinner("Buscando evidências nas diretrizes oficiais..."):
-                palavras_chave = obter_palavras_chave(texto_extraido)
+            # TRAVA 1: Limita o texto aos primeiros 3000 caracteres para economizar tokens (cota livre)
+            texto_limitado = texto_extraido[:3000] 
+            
+            with st.spinner("Extraindo palavras-chave..."):
+                palavras_chave = obter_palavras_chave(texto_limitado)
+                
+            with st.spinner("Buscando evidências nas diretrizes oficiais (Google Search)..."):
                 evidencias = buscar_referencias_confiaveis(palavras_chave)
                 
+            with st.spinner("Aguardando 8s por segurança (Evitando limite da API Gratuita)..."):
+                # TRAVA 2: Pausa de 8 segundos para evitar o Erro 429 de excesso de requisições
+                time.sleep(8)
+                
             with st.spinner("Avaliando risco de desinformação com IA..."):
-                resultado = gerar_analise_desinformacao(texto_extraido, evidencias)
-                destaque_html = destacar_risco(resultado)
-                links_extraidos = extrair_links(resultado)
-                resultado_com_links = transformar_links_em_html(resultado)
+                # Enviamos o texto limitado para a análise final
+                resultado = gerar_analise_desinformacao(texto_limitado, evidencias)
+                
+                # Se a API ainda assim retornar erro, ele avisa na tela ao invés de quebrar
+                if "Erro" in resultado:
+                    st.error(resultado)
+                else:
+                    destaque_html = destacar_risco(resultado)
+                    links_extraidos = extrair_links(resultado)
+                    resultado_com_links = transformar_links_em_html(resultado)
 
-            # Renderização dos resultados
-            st.markdown("### Resultado da Análise IA:")
-            st.markdown(destaque_html, unsafe_allow_html=True)
-            st.markdown(resultado_com_links, unsafe_allow_html=True)
+                    # Renderização dos resultados
+                    st.markdown("### Resultado da Análise IA:")
+                    st.markdown(destaque_html, unsafe_allow_html=True)
+                    st.markdown(resultado_com_links, unsafe_allow_html=True)
 
-            # Acordeão de Transparência (Opcional, mas muito bom para projetos acadêmicos)
-            with st.expander("Ver Bastidores da Checagem (Transparência)"):
-                st.markdown(f"**Palavras-chave pesquisadas:** `{palavras_chave}`")
-                st.markdown("**Evidências encontradas no buscador:**")
-                st.text(evidencias)
+                    # Acordeão de Transparência (Opcional, mas muito bom para projetos acadêmicos)
+                    with st.expander("Ver Bastidores da Checagem (Transparência)"):
+                        st.markdown(f"**Palavras-chave pesquisadas:** `{palavras_chave}`")
+                        st.markdown("**Evidências encontradas no buscador:**")
+                        st.text(evidencias)
 
-            st.markdown("---")
-            opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
-            st.markdown(f"**Sua resposta:** {opiniao}")
+                    st.markdown("---")
+                    opiniao = st.radio("Você concorda com essa avaliação da IA?", ["Sim", "Não", "Parcialmente"])
+                    st.markdown(f"**Sua resposta:** {opiniao}")
 
 st.markdown("---")
 st.markdown("Desenvolvido por Caio — Projeto FAPEMIG 🧠🔬")
