@@ -123,9 +123,9 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     Sua única fonte de verdade é a 'BIBLIOTECA DE DIRETRIZES OFICIAIS' e o 'ARSENAL DE EVIDÊNCIAS'.
 
     Siga este protocolo de raciocínio antes de responder:
-    PASSO 1: Identifique a especialidade central da matéria.
-    PASSO 2: Verifique se há uma diretriz específica no 'Arsenal' ou na 'Biblioteca' para a alegação da matéria.
-    PASSO 3: Se a alegação NÃO estiver explicitamente validada nos links fornecidos, ela é automaticamente considerada NÃO COMPROVADA, independentemente da fonte da notícia.
+    PASSO 1: Identifique a(s) especialidade(s) central(is) da matéria (Pode ser mais de uma).
+    PASSO 2: Identifique a CONDIÇÃO CLÍNICA ou ANATOMIA foco (Ex: Doença Periodontal, Cárie, etc.), separando-a da "intervenção" (Ex: Dieta, Óleo essencial).
+    PASSO 3: Se a "intervenção" da matéria NÃO constar nos catálogos oficiais para aquela "condição clínica", a alegação é NÃO COMPROVADA.
 
     BIBLIOTECA DE DIRETRIZES OFICIAIS (FONTE ÚNICA):
     - [Endodontia]: https://www.aae.org/specialty/clinical-resources/guidelines-position-statements/
@@ -142,36 +142,35 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     {texto_materia}
 
     REGRAS INVIOLÁVEIS:
-    1. PROIBIDO usar conhecimento prévio sobre estudos universitários se eles não forem diretrizes de associações.
-    2. Se a biblioteca não confirmar a eficácia, o risco é 🟨 POTENCIAL RISCO ou 🟥 ALTO RISCO. Nunca Verde.
-    3. O 'Padrão-Ouro' deve ser extraído apenas do link da especialidade correspondente.
+    1. PROIBIDO usar conhecimento prévio para validar tratamentos. Só valide se estiver nos links.
+    2. No Item 5, MESMO QUE a intervenção da matéria não exista nas diretrizes, você OBRIGATORIAMENTE deve nomear o documento mestre que rege a CONDIÇÃO CLÍNICA identificada.
 
     FORMATO DE RESPOSTA:
 
     ### 🛡️ PARECER DE AUDITORIA INTERNA
-    - Especialidade identificada: 
-    - Link da Biblioteca utilizado:
-    - A alegação da matéria consta no link? (Sim/Não)
+    - Especialidade(s) identificada(s): (Liste uma ou mais)
+    - Condição Clínica Foco: (Qual é a doença ou estrutura anatômica em jogo?)
+    - Link(s) da Biblioteca utilizado(s):
+    - A intervenção da matéria consta nas diretrizes dessa condição? (Sim/Não)
 
     ### 1. Resumo Técnico
-    (Resumo objetivo)
+    (Resumo objetivo da matéria)
 
     ### 2. Avaliação de Risco
     (🟨 Potencial Risco | 🟥 Alto Risco | 🟩 Baixo Risco)
     
     ### 3. Justificativa de Auditoria
-    (Confronte: "A matéria diz X, mas a biblioteca oficial na especialidade Y não lista X como procedimento padrão".)
+    (Confronte a matéria com a biblioteca. Ex: "A matéria propõe X para a condição Y. No entanto, as diretrizes da especialidade Z não reconhecem X como padrão...")
 
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
-    (Descreva apenas o que está no catálogo da associação escolhida.)
+    (Descreva o tratamento padrão para a Condição Clínica Foco, segundo a especialidade.)
 
     ### 5. Referências e Diretrizes Oficiais
-    - 📂 **Catálogo Oficial da Especialidade:** [Insira o link da biblioteca correspondente]
-    - 📄 **Documento Padrão-Ouro:** (Escreva o NOME EXATO da diretriz, manual ou 'Position Paper' oficial da associação que o usuário deve buscar dentro do catálogo acima para confirmar a conduta. Ex: "Parameters of Care", "Clinical Practice Guideline on...").
-    - 🔗 **Links Específicos Coletados:** (Se o 'Arsenal de Evidências' retornou algum link real que confirme a conduta, liste-o aqui. Caso o arsenal esteja vazio sobre o padrão-ouro, escreva: "A busca atual não retornou links diretos; consulte o documento nomeado acima no catálogo oficial.")
+    - 📂 **Catálogo(s) Oficial(is):** [Liste o(s) link(s) da(s) especialidade(s) selecionada(s)]
+    - 📄 **Documento Padrão-Ouro Recomendado:** (Com base na Condição Clínica Foco, cite o NOME EXATO do documento oficial da associação que o usuário deve buscar no catálogo para ver o padrão-ouro de tratamento. Ex: "Clinical Practice Guideline for the Treatment of Stage I-III Periodontitis". Explique brevemente: "Este documento rege o tratamento aceito para [Condição Clínica], o qual deve ser usado como base de comparação.")
+    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca atual não retornou links diretos confirmando a intervenção da matéria; consulte o documento nomeado acima.")
     """
     try:
-        # Temperature 0.0 é o que garante que ela não "fuja" da biblioteca
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
