@@ -165,13 +165,16 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     ### 4. Padrão-Ouro (Conduta Clínica Oficial)
     (Descreva o tratamento padrão para a Condição Clínica Foco, segundo a especialidade.)
 
-   ### 5. Referências e Diretrizes Oficiais
-    - 📂 **Catálogo(s) Oficial(is):** [Liste o(s) link(s) da(s) especialidade(s) selecionada(s)]
-    - 📄 **Documento Padrão-Ouro Recomendado:** (Escreva o NOME EXATO do documento oficial da associação. Em seguida, crie um link de busca simples do Google usando o nome do documento e a sigla da associação. 
-    FORMATO OBRIGATÓRIO: [Nome do Documento](https://www.google.com/search?q=Nome+do+Documento+SiglaDaAssociacao)
-    Exemplo: [Clinical Practice Guideline on Fluoride Therapy](https://www.google.com/search?q=Clinical+Practice+Guideline+on+Fluoride+Therapy+AAPD). 
-    Logo abaixo, explique brevemente por que este é o documento de referência).
-    - 🔗 **Links Específicos Coletados:** (Se o arsenal trouxe algo útil, liste. Se não, diga: "A busca em tempo real não retornou links diretos confirmando a intervenção; utilize o link de busca acima para ler a recomendação oficial.")
+  ### 5. Referências e Diretrizes Oficiais
+    - 📂 **Catálogo(s) Oficial(is):** [Liste o(s) link(s) da(s) especialidade(s) selecionada(s) na Biblioteca]
+    
+    - 📄 **Documento Padrão-Ouro Identificado:** (Você OBRIGATORIAMENTE deve identificar e escrever o NOME REAL, EXATO e OFICIAL do documento pilar, diretriz ou 'Position Paper' da associação que dita o tratamento da Condição Clínica Foco. Ex: Se o foco for Cárie na AAPD, o documento real é 'Clinical Practice Guideline on Fluoride Therapy'. Se for Doença Periodontal na AAP, é 'Clinical Practice Guidelines for the Treatment of Stage I–III Periodontitis').
+    
+    - 🔗 **Link Direto de Verificação:** [Acessar documento: NOME_DO_DOCUMENTO_IDENTIFICADO](https://www.google.com/search?q=NOME_DO_DOCUMENTO_IDENTIFICADO+SIGLA_DA_ASSOCIAÇÃO)
+    
+    *(Diretriz de Formatação: No link acima, substitua os espaços do nome do documento por '+'. Exemplo real: se o documento for 'Clinical Practice Guideline on Fluoride Therapy' da AAPD, o link deve ser exatamente: [Acessar documento: Clinical Practice Guideline on Fluoride Therapy](https://www.google.com/search?q=Clinical+Practice+Guideline+on+Fluoride+Therapy+AAPD) )*
+
+    - 🔗 **Links Específicos Coletados:** (Se o 'Arsenal de Evidências' trouxe algum link de artigo específico da matéria, liste aqui. Caso contrário, informe: "Nenhum link externo validou a intervenção alternativa da matéria.")
     """
     try:
         resposta = model.generate_content(prompt)
