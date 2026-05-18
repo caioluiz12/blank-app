@@ -134,6 +134,7 @@ def gerar_analise_desinformacao(texto_materia, contexto_cientifico):
     - [Odontopediatria]: https://www.aapd.org/research/oral-health-policies--recommendations/
     - [Ortodontia]: https://www2.aaoinfo.org/advocacy/advocacy-efforts/orthofacts/
     - [Reabilitação]: https://www.theaapd.org/research_awards/research/research_committee_publications/
+    - [Dentística e Outros]: https://www.ada.org/resources/research/science/evidence-based-dental-research/
 
     ARSENAL DE EVIDÊNCIAS COLETADAS:
     {contexto_cientifico}
